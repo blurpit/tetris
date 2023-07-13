@@ -97,13 +97,20 @@ export class Tetris {
         this.spawnTetrimino();
     }
 
-    /** Place the Tetrimino in play at its spawn location above the Skyline */
+    /** Move the Tetrimino in play to its spawn location above the Skyline and reset its rotation */
     public spawnTetrimino() {
         this.tetrimino.setCenterPos(
             Math.floor(this.cfg.matrixWidth/2) - 1, 
             this.cfg.matrixHeight
         );
         this.tetrimino.resetRotation();
+    }
+    
+    /** Swap the Next Tetrimino into the Tetrimino in play and generate a new Next Tetrimino  */
+    public swapNextTetrimino() {
+        this.tetrimino = this.nextTetrimino;
+        this.nextTetrimino = this.getNextTetrimino();
+        this.canHold = true;
     }
 
     /** 
@@ -270,11 +277,46 @@ export class Tetris {
         for (let mino of this.tetrimino.minos) {
             this.matrix[y + mino[1]][x + mino[0]] = shape;
         }
+    }
 
-        this.tetrimino = this.nextTetrimino;
-        this.nextTetrimino = this.getNextTetrimino();
-        this.canHold = true;
-        this.spawnTetrimino();
+    /**
+     * Checks the Lock Out game over condition: The game is Locked Out if the Tetrimino in play is entirely above 
+     * the Skyline.
+     * 
+     * This should be called after the Tetrimino in play has been Locked Down and after full lines have been cleared, 
+     * but before the next Tetrimino is generated.
+     * @returns whether the game has Locked Out
+     */
+    public checkLockOut(): boolean {
+        let y = this.tetrimino.y;
+
+        for (let mino of this.tetrimino.minos) {
+            if (y + mino[1] < this.cfg.matrixHeight) {
+                // Mino is below the Skyline so the game is not Locked Out
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Checks the Block Out game over condition: The game is Blocked Out if the Tetrimino in play has any Minos
+     * overlapping with a Block in the Matrix.
+     * 
+     * This should be called immediately after a new Tetrimino spawns.
+     * @returns whether the game has Blocked Out
+     */
+    public checkBlockOut(): boolean {
+        let x = this.tetrimino.x;
+        let y = this.tetrimino.y;
+
+        for (let mino of this.tetrimino.minos) {
+            if (this.matrix[y + mino[1]][x + mino[0]] !== null) {
+                // Newly spawned Tetrimino was blocked
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Reset the game */

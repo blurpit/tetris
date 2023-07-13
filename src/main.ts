@@ -113,6 +113,16 @@ class Controller {
         if (this.game.moveDown()) {
             this.game.lockDown();
             this.clearFullLines();
+            if (this.game.checkLockOut()) {
+                this.gameOver();
+                return;
+            }
+            this.game.swapNextTetrimino();
+            this.game.spawnTetrimino();
+            if (this.game.checkBlockOut()) {
+                this.gameOver();
+                return;
+            }
         }
         this.drawGraphics();
     }
@@ -177,6 +187,12 @@ class Controller {
         return false;
     }
 
+    /** Called when the game is over */
+    public gameOver() {
+        this.graphics.gameOver();
+        this.togglePaused();
+    }
+
     /** Reset the game */
     public reset() {
         this.game.reset();
@@ -222,7 +238,6 @@ class HumanController extends Controller {
             this.startLockDownTimer();
         }
 
-        // Draw graphics
         this.drawGraphics();
     }
 
@@ -232,7 +247,7 @@ class HumanController extends Controller {
             this.isSoftDropping = true;
             this.interruptFallLoop();
             this.startFallLoop();
-            this.moveDown(); // lock down instantly
+            this.moveDown(); // Move down instantly
         }
     }
 
@@ -262,6 +277,11 @@ class HumanController extends Controller {
         return false;
     }
 
+    // public gameOver() {
+    //     this.graphics.gameOver();
+    //     this.togglePaused();
+    // }
+
     public reset() {
         super.reset();
         this.interruptFallLoop();
@@ -269,14 +289,20 @@ class HumanController extends Controller {
     }
 
     public togglePaused() {
-        super.togglePaused();
+        this.graphics.togglePaused();
         if (this.graphics.isPaused) {
+            // Paused or game over
             this.endSoftDrop();
             this.interruptFallLoop();
             this.interruptLockDownTimer();
+        } else if (this.graphics.isGameOver) {
+            // Game over but not paused, restart the game
+            this.reset();
+            this.start();
         } else {
             this.startFallLoop();
         }
+        this.drawGraphics();
     }
 
     protected clearFullLines() {
@@ -287,6 +313,27 @@ class HumanController extends Controller {
             this.interruptFallLoop();
             this.startFallLoop();
         }
+    }
+
+    /** Lock Down the Tetrimino in play and draw graphics */
+    private lockDown() {
+        this.lockDownTimer = null;
+
+        this.game.lockDown();
+        this.clearFullLines();
+        if (this.game.checkLockOut()) {
+            this.gameOver();
+            return;
+        }
+        this.game.swapNextTetrimino();
+        this.game.spawnTetrimino();
+        if (this.game.checkBlockOut()) {
+            this.gameOver();
+            return;
+        }
+
+        this.startFallLoop();
+        this.drawGraphics();
     }
 
     /**
@@ -327,15 +374,6 @@ class HumanController extends Controller {
             clearTimeout(this.lockDownTimer);
             this.lockDownTimer = null;
         }
-    }
-
-    /** Lock Down the Tetrimino in play and draw graphics */
-    private lockDown() {
-        this.lockDownTimer = null;
-        this.game.lockDown();
-        this.clearFullLines();
-        this.startFallLoop();
-        this.drawGraphics();
     }
 
     /** Register event listeners for keyboard controls */

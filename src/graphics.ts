@@ -109,6 +109,8 @@ export class Graphics {
 
     /** Whether the game is paused */
     public isPaused;
+    /** Whether the game is over */
+    public isGameOver;
 
     constructor(config: GraphicsConfig) {
         this.cfg = config;
@@ -138,6 +140,7 @@ export class Graphics {
         this.uiY = 0;
 
         this.isPaused = false;
+        this.isGameOver = false;
     }
 
     /** Reset game */
@@ -155,6 +158,7 @@ export class Graphics {
         this.level = 1;
 
         this.isPaused = false;
+        this.isGameOver = false;
     }
 
     /** Queue a frame to draw */
@@ -268,6 +272,11 @@ export class Graphics {
     /** Show or hide the pause screen */
     public togglePaused() {
         this.isPaused = !this.isPaused;
+    }
+
+    /** Show the game over screen and pause */
+    public gameOver() {
+        this.isGameOver = true;
     }
 
     /**
@@ -501,7 +510,10 @@ export class Graphics {
         ctx.fillStyle = "white";
         ctx.textAlign = "center";
         ctx.font = `${this.cfg.bigFontSize}px ${this.cfg.fontFamily}`;
-        ctx.fillText("paused", this.canvas.width/2, this.canvas.height/2);
+        ctx.fillText(
+            this.isGameOver ? "game over" : "paused", 
+            this.canvas.width/2, this.canvas.height/2
+        );
     }
 
     /**
