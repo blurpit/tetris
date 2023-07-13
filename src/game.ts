@@ -287,7 +287,8 @@ export class Tetrimino {
         this.game = game;
         this.shape = shape;
         this.initMinos = Minos[shape];
-        this.minos = this.copyMinos(this.initMinos);
+        this.minos = [];
+        this.copyMinos();
         this.facing = Facing.North;
         this.center = [0, 0];
     }
@@ -418,13 +419,11 @@ export class Tetrimino {
     }
 
     /** Copy the Mino positions from `initMinos` into `minos` */
-    private copyMinos(initMinos: Vec2[]): Vec2[] {
-        let minos: Vec2[] = [];
-        for (let i = 0; i < initMinos.length; i++) {
-            let mino = initMinos[i];
-            minos[i] = [mino[0], mino[1]];
+    private copyMinos() {
+        for (let i = 0; i < this.initMinos.length; i++) {
+            let mino = this.initMinos[i];
+            this.minos[i] = [mino[0], mino[1]];
         }
-        return minos;
     }
 }
 
