@@ -42,6 +42,8 @@ class Controller {
             fontSize: 40,
             bigFontSize: 50,
             textPadding: 8,
+
+            pauseOverlayColor: "#000b"
         });
 
         this.graphics.setHighScore(this.game.highScore);
@@ -180,6 +182,12 @@ class Controller {
         this.game.reset();
         this.graphics.reset();
     }
+
+    /** Pause or unpause the game */
+    public togglePaused() {
+        this.graphics.togglePaused();
+        this.drawGraphics();
+    }
 }
 
 /**
@@ -260,6 +268,17 @@ class HumanController extends Controller {
         this.interruptLockDownTimer();
     }
 
+    public togglePaused() {
+        super.togglePaused();
+        if (this.graphics.isPaused) {
+            this.endSoftDrop();
+            this.interruptFallLoop();
+            this.interruptLockDownTimer();
+        } else {
+            this.startFallLoop();
+        }
+    }
+
     protected clearFullLines() {
         let levelBefore = this.game.level;
         super.clearFullLines();
@@ -324,6 +343,13 @@ class HumanController extends Controller {
         addEventListener("keydown", (e) => {
             let moved = false;
 
+            if (e.key == "Escape") {
+                this.togglePaused();
+            }
+            if (this.graphics.isPaused) {
+                return;
+            }
+
             switch (e.key) {
                 case "ArrowLeft":
                     moved = this.moveLeft();
@@ -364,6 +390,10 @@ class HumanController extends Controller {
         });
 
         addEventListener("keyup", (e) => {
+            if (this.graphics.isPaused) {
+                return;
+            }
+
             switch (e.key) {
                 case "ArrowDown":
                     this.endSoftDrop();

@@ -72,6 +72,8 @@ export type GraphicsConfig = {
     bigFontSize: number,
     /** Padding in pixels between UI text, like score and level */
     textPadding: number,
+    /** Color of the background when paused / game over */
+    pauseOverlayColor: Color,
 }
 
 /** Class for drawing Tetris graphics */
@@ -105,6 +107,9 @@ export class Graphics {
     /** Current y value for drawing UI elements */
     private uiY;
 
+    /** Whether the game is paused */
+    public isPaused;
+
     constructor(config: GraphicsConfig) {
         this.cfg = config;
 
@@ -131,6 +136,8 @@ export class Graphics {
         this.level = 1;
         this.highScore = 0;
         this.uiY = 0;
+
+        this.isPaused = false;
     }
 
     /** Reset game */
@@ -146,6 +153,8 @@ export class Graphics {
         this.heldTetrimino = null;
         this.score = 0;
         this.level = 1;
+
+        this.isPaused = false;
     }
 
     /** Queue a frame to draw */
@@ -169,6 +178,7 @@ export class Graphics {
         this.drawLevel();
         this.drawHighScore();
         this.drawHeldTetrimino();
+        if (this.isPaused) this.drawPauseScreen();
         
         this.queueFrame = false;
     }
@@ -255,6 +265,11 @@ export class Graphics {
         this.highScore = highScore;
     }
 
+    /** Show or hide the pause screen */
+    public togglePaused() {
+        this.isPaused = !this.isPaused;
+    }
+
     /**
      * Set a Block color in the color matrix
      * @param x x position of the Block
@@ -328,6 +343,7 @@ export class Graphics {
 
         // Write text
         ctx.fillStyle = "black";
+        ctx.textAlign = "left";
         ctx.font = `${this.cfg.fontSize}px ${this.cfg.fontFamily}`;
         ctx.fillText("next", x, y + this.cfg.fontSize);
         y += this.cfg.fontSize + this.cfg.textPadding;
@@ -370,6 +386,7 @@ export class Graphics {
 
         // Write label
         ctx.fillStyle = "black";
+        ctx.textAlign = "left";
         ctx.font = `${this.cfg.fontSize}px ${this.cfg.fontFamily}`;
         ctx.fillText("score", x, y + this.cfg.fontSize);
         y += this.cfg.fontSize;
@@ -393,6 +410,7 @@ export class Graphics {
 
         // Write label
         ctx.fillStyle = "black";
+        ctx.textAlign = "left";
         ctx.font = `${this.cfg.fontSize}px ${this.cfg.fontFamily}`;
         ctx.fillText("level", x, y + this.cfg.fontSize);
         y += this.cfg.fontSize;
@@ -416,6 +434,7 @@ export class Graphics {
 
         // Write label
         ctx.fillStyle = "black";
+        ctx.textAlign = "left";
         ctx.font = `${this.cfg.fontSize}px ${this.cfg.fontFamily}`;
         ctx.fillText("high score", x, y + this.cfg.fontSize);
         y += this.cfg.fontSize;
@@ -440,6 +459,7 @@ export class Graphics {
 
         // Write text
         ctx.fillStyle = "black";
+        ctx.textAlign = "left";
         ctx.font = `${this.cfg.fontSize}px ${this.cfg.fontFamily}`;
         ctx.fillText("hold", x, y + this.cfg.fontSize);
         y += this.cfg.fontSize + this.cfg.textPadding;
@@ -468,6 +488,20 @@ export class Graphics {
                 );
             }
         }
+    }
+
+    /** Draw the paused screen */
+    private drawPauseScreen() {
+        let ctx = this.context;
+
+        ctx.fillStyle = this.cfg.pauseOverlayColor;
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Write text
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        ctx.font = `${this.cfg.bigFontSize}px ${this.cfg.fontFamily}`;
+        ctx.fillText("paused", this.canvas.width/2, this.canvas.height/2);
     }
 
     /**
