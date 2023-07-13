@@ -168,7 +168,7 @@ class Controller {
     /** Drop the Tetrimino in play until it lands on a Surface, immediately Lock Down, and draw graphics */
     public hardDrop() {
         this.game.hardDrop();
-        this.drawGraphics();
+        this.moveDown();
     }
 
     /** 
@@ -276,11 +276,6 @@ class HumanController extends Controller {
         }
         return false;
     }
-
-    // public gameOver() {
-    //     this.graphics.gameOver();
-    //     this.togglePaused();
-    // }
 
     public reset() {
         super.reset();
