@@ -243,21 +243,6 @@ export class Graphics {
         this.colorMatrix[y][x] = null;
     }
 
-    public clearLine(y: number) {
-        let lineY = y;
-        let width = this.cfg.matrixWidth;
-        let height = this.cfg.matrixHeight;
-
-        for (let y = lineY; y < height-1; y++) {
-            for (let x = 0; x < width; x++) {
-                this.colorMatrix[y][x] = this.colorMatrix[y+1][x];
-            }
-        }
-        for (let x = 0; x < width; x++) {
-            this.colorMatrix[height-1][x] = null;
-        }
-    }
-
     public drawBlocks() {
         let width = this.cfg.matrixWidth;
         let height = this.cfg.matrixHeight;

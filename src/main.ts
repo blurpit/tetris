@@ -97,7 +97,6 @@ class Controller {
     protected clearFullLines() {
         this.game.getFullLines().forEach((y) => {
             this.game.clearLine(y);
-            this.graphics.clearLine(y);
         });
         this.graphics.setScore(this.game.linesCleared);
         this.graphics.setLevel(this.game.level);
