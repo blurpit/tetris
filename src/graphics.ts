@@ -96,6 +96,8 @@ export class Graphics {
     private score: number;
     /** Current level */
     private level: number;
+    /** Current y value for drawing UI elements */
+    private uiY;
 
     constructor(config: GraphicsConfig) {
         this.cfg = config;
@@ -119,6 +121,7 @@ export class Graphics {
         this.nextTetrimino = TetriminoShape.O;
         this.score = 0;
         this.level = 1;
+        this.uiY = 0;
     }
 
     /** Reset game */
@@ -147,6 +150,7 @@ export class Graphics {
         this.context.fillStyle = this.cfg.bgColor;
         this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
+        this.uiY = 0;
         this.drawGrid();
         this.drawBlocks();
         this.drawNextTetrimino();
@@ -289,9 +293,10 @@ export class Graphics {
         let size = this.getBlockSize();
         let [matX, matY] = this.getMatrixPos(size);
         let ctx = this.context;
-
+        
         let x = matX + size * this.cfg.matrixWidth + this.cfg.matrixPadding;
         let y = matY;
+        size = this.cfg.fontSize / 2;
 
         // Write text
         ctx.fillStyle = "black";
@@ -330,19 +335,19 @@ export class Graphics {
                 size, TetriminoColors[this.nextTetrimino]
             );
         }
+        y += size * width;
+
+        this.uiY = y + this.cfg.textPadding;
     }
 
     /** Draw the score text to the canvas */
     private drawScore() {
         let size = this.getBlockSize();
-        let [matX, matY] = this.getMatrixPos(size);
+        let [matX, _] = this.getMatrixPos(size);
         let ctx = this.context;
 
         let x = matX + size * this.cfg.matrixWidth + this.cfg.matrixPadding;
-        let y = matY 
-            + this.cfg.fontSize + this.cfg.textPadding
-            + this.cfg.nextPreviewSize * size 
-            + this.cfg.textPadding;
+        let y = this.uiY;
 
         // Write label
         ctx.fillStyle = "black";
@@ -353,21 +358,19 @@ export class Graphics {
         // Write score
         ctx.font = `${this.cfg.bigFontSize}px ${this.cfg.fontFamily}`;
         ctx.fillText(this.score.toString(), x, y + this.cfg.bigFontSize);
+        y += this.cfg.bigFontSize;
+
+        this.uiY = y + this.cfg.textPadding;
     }
 
     /** Draw the level text to the canvas */
     private drawLevel() {
         let size = this.getBlockSize();
-        let [matX, matY] = this.getMatrixPos(size);
+        let [matX, _] = this.getMatrixPos();
         let ctx = this.context;
 
         let x = matX + size * this.cfg.matrixWidth + this.cfg.matrixPadding;
-        let y = matY 
-            + this.cfg.fontSize + this.cfg.textPadding // next preview
-            + this.cfg.nextPreviewSize * size 
-            + this.cfg.textPadding
-            + this.cfg.fontSize + this.cfg.bigFontSize
-            + this.cfg.textPadding;
+        let y = this.uiY;
 
         // Write label
         ctx.fillStyle = "black";
@@ -378,6 +381,9 @@ export class Graphics {
         // Write level
         ctx.font = `${this.cfg.bigFontSize}px ${this.cfg.fontFamily}`;
         ctx.fillText(this.level.toString(), x, y + this.cfg.bigFontSize);
+        y += this.cfg.bigFontSize;
+
+        this.uiY = y + this.cfg.textPadding;
     }
 
     /**
