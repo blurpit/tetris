@@ -91,8 +91,11 @@ export class Tetris {
 
     /** Place the Tetrimino in play at its spawn location above the Skyline */
     public spawnTetrimino() {
-        // Todo: figure out placement for non-standard matrix size
-        this.tetrimino.setCenterPos(4, 20);
+        this.tetrimino.setCenterPos(
+            Math.floor(this.cfg.matrixWidth/2) - 1, 
+            this.cfg.matrixHeight
+        );
+        console.log(this.tetrimino.center);
         this.tetrimino.resetRotation();
     }
 
