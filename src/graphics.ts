@@ -331,7 +331,7 @@ export class Graphics {
         for (let mino of this.nextMinos) {
             this.drawBlock(
                 x + (width * size)/2 + (mino[0] - minX) * size - tetrWidth/2,
-                y + (width * size)/2 + (mino[1] - minY) * size - tetrHeight/2,
+                y + (width * size)/2 + (maxY - mino[1] - minY) * size - tetrHeight/2,
                 size, TetriminoColors[this.nextTetrimino]
             );
         }

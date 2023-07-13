@@ -84,7 +84,7 @@ class Controller {
 
         // Draw next tetrimino
         this.graphics.setNextTetrimino(
-            this.game.nextTetrimino.minos,
+            this.game.nextTetrimino.initMinos,
             this.game.nextTetrimino.shape
         );
 
