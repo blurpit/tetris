@@ -29,7 +29,7 @@ class Controller {
             canvas: document.getElementById("game-canvas") as HTMLCanvasElement,
             matrixWidth: this.game.cfg.matrixWidth,
             matrixHeight: this.game.cfg.matrixHeight,
-            nextPreviewSize: 5,
+            uiPreviewSize: 5,
 
             showGhost: true,
             bgColor: "#eee",
@@ -153,10 +153,26 @@ class Controller {
         this.moveDown();
     }
 
-    /** Drop the Tetrimino in play until it lands on a Surface, immediately Lock Down, and draw graphics. */
+    /** Drop the Tetrimino in play until it lands on a Surface, immediately Lock Down, and draw graphics */
     public hardDrop() {
         this.game.hardDrop();
         this.drawGraphics();
+    }
+
+    /** 
+     * Hold the Tetrimino in play, swapping it with the previously held Tetrimino if it exists, and draw graphics
+     * @returns true if the Tetrimino was held
+     */
+    public hold(): boolean {
+        if (this.game.hold()) {
+            this.graphics.setHeldTetrimino(
+                this.game.heldTetrimino?.initMinos ?? null, 
+                this.game.heldTetrimino?.shape ?? null
+            );
+            this.drawGraphics();
+            return true;
+        }
+        return false;
     }
 
     /** Reset the game */
@@ -226,6 +242,16 @@ class HumanController extends Controller {
         this.game.hardDrop();
         this.lockDown();
         this.drawGraphics();
+    }
+
+    public hold(): boolean {
+        if (super.hold()) {
+            this.interruptLockDownTimer();
+            this.interruptFallLoop();
+            this.startFallLoop();
+            return true;
+        }
+        return false;
     }
 
     public reset() {
@@ -319,6 +345,9 @@ class HumanController extends Controller {
                     break;
                 case " ":
                     this.hardDrop();
+                    break;
+                case "Shift":
+                    this.hold();
                     break;
                 case "r":
                     this.reset();

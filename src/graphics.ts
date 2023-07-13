@@ -46,8 +46,8 @@ export type GraphicsConfig = {
     matrixWidth: number,
     /** Height of the Matrix in blocks */
     matrixHeight: number,
-    /** Width/height of the Next Tetrimino preview window in blocks */
-    nextPreviewSize: number
+    /** Width/height of the Next/Held Tetrimino preview window in blocks */
+    uiPreviewSize: number
 
     // Game styling
     /** Show Ghost Piece */
@@ -92,6 +92,10 @@ export class Graphics {
     private nextTetrimino: TetriminoShape;
     /** Mino positions of the next Tetrimino */
     private nextMinos: Vec2[];
+    /** Shape of the held Tetrimino */
+    private heldTetrimino: TetriminoShape | null;
+    /** Mino positions of the held Tetrimino */
+    private heldMinos: Vec2[] | null;
     /** Current score */
     private score: number;
     /** Current level */
@@ -121,6 +125,8 @@ export class Graphics {
 
         this.nextMinos = [];
         this.nextTetrimino = TetriminoShape.O;
+        this.heldMinos = null;
+        this.heldTetrimino = null;
         this.score = 0;
         this.level = 1;
         this.highScore = 0;
@@ -136,6 +142,8 @@ export class Graphics {
         }
         this.nextMinos = [];
         this.nextTetrimino = TetriminoShape.O;
+        this.heldMinos = null;
+        this.heldTetrimino = null;
         this.score = 0;
         this.level = 1;
     }
@@ -160,6 +168,7 @@ export class Graphics {
         this.drawScore();
         this.drawLevel();
         this.drawHighScore();
+        this.drawHeldTetrimino();
         
         this.queueFrame = false;
     }
@@ -219,6 +228,16 @@ export class Graphics {
     public setNextTetrimino(minos: Vec2[], shape: TetriminoShape) {
         this.nextMinos = minos;
         this.nextTetrimino = shape;
+    }
+
+    /**
+     * Set the Held Tetrimino display
+     * @param minos Array of positions of each Mino in the Tetrimino, relative to the center Mino
+     * @param shape Tetrimino shape
+     */
+    public setHeldTetrimino(minos: Vec2[] | null, shape: TetriminoShape | null) {
+        this.heldMinos = minos;
+        this.heldTetrimino = shape;
     }
 
     /** Set the score display */
@@ -298,7 +317,7 @@ export class Graphics {
 
     /** Draw the Next Tetrimino and "next" text to the canvas */
     private drawNextTetrimino() {
-        let width = this.cfg.nextPreviewSize;
+        let width = this.cfg.uiPreviewSize;
         let size = this.getBlockSize();
         let [matX, matY] = this.getMatrixPos(size);
         let ctx = this.context;
@@ -323,16 +342,7 @@ export class Graphics {
         ctx.stroke();
 
         // Find bounding box of the tetrimino
-        let minX = 999;
-        let maxX = -999;
-        let minY = 999;
-        let maxY = -999;
-        for (let mino of this.nextMinos) {
-            minX = Math.min(minX, mino[0]);
-            maxX = Math.max(maxX, mino[0]);
-            minY = Math.min(minY, mino[1]);
-            maxY = Math.max(maxY, mino[1]);
-        }
+        let [minX, maxX, minY, maxY] = this.getTetriminoBounds(this.nextMinos);
         let tetrWidth = (maxX - minX + 1) * size;
         let tetrHeight = (maxY - minY + 1) * size;
 
@@ -418,6 +428,48 @@ export class Graphics {
         this.uiY = y + this.cfg.textPadding;
     }
 
+    /** Draw the Held Tetrimino and "hold" text to the canvas */
+    private drawHeldTetrimino() {
+        let size = this.cfg.fontSize / 2;
+        let width = this.cfg.uiPreviewSize;
+        let [matX, matY] = this.getMatrixPos();
+        let ctx = this.context;
+        
+        let x = matX - this.cfg.matrixPadding - size * width;
+        let y = matY;
+
+        // Write text
+        ctx.fillStyle = "black";
+        ctx.font = `${this.cfg.fontSize}px ${this.cfg.fontFamily}`;
+        ctx.fillText("hold", x, y + this.cfg.fontSize);
+        y += this.cfg.fontSize + this.cfg.textPadding;
+
+        // Matrix border & background color
+        ctx.beginPath();
+        ctx.rect(x, y, width * size, width * size);
+        ctx.fillStyle = this.cfg.matrixBgColor;
+        ctx.fill();
+        ctx.lineWidth = this.cfg.blockStrokeWidth;
+        ctx.strokeStyle = "black";
+        ctx.stroke();
+
+        if (this.heldTetrimino !== null && this.heldMinos !== null) {
+            // Find bounding box of the tetrimino
+            let [minX, maxX, minY, maxY] = this.getTetriminoBounds(this.heldMinos);
+            let tetrWidth = (maxX - minX + 1) * size;
+            let tetrHeight = (maxY - minY + 1) * size;
+
+            // Draw tetrimino
+            for (let mino of this.heldMinos) {
+                this.drawBlock(
+                    x + (width * size)/2 + (mino[0] - minX) * size - tetrWidth/2,
+                    y + (width * size)/2 + (maxY - mino[1] - minY) * size - tetrHeight/2,
+                    size, TetriminoColors[this.heldTetrimino]
+                );
+            }
+        }
+    }
+
     /**
      * Get the position of the main game area in canvas coordinates
      * @param blockSize Width/height of Blocks in pixels
@@ -446,5 +498,24 @@ export class Graphics {
         let b = (this.canvas.height - this.cfg.matrixPadding*2) 
                 / this.cfg.matrixHeight;
         return Math.min(a, b);
+    }
+
+    /**
+     * Get the bounding box of a Tetrimino
+     * @param minos Array of positions of each Mino in the Tetrimino, relative to the center Mino
+     * @returns [minX, maxX, minY, maxY]
+     */
+    private getTetriminoBounds(minos: Vec2[]) {
+        let minX = 999;
+        let maxX = -999;
+        let minY = 999;
+        let maxY = -999;
+        for (let mino of minos) {
+            minX = Math.min(minX, mino[0]);
+            maxX = Math.max(maxX, mino[0]);
+            minY = Math.min(minY, mino[1]);
+            maxY = Math.max(maxY, mino[1]);
+        }
+        return [minX, maxX, minY, maxY];
     }
 }

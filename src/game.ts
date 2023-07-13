@@ -52,12 +52,14 @@ export class Tetris {
 
     public tetrimino: Tetrimino;
     public nextTetrimino: Tetrimino;
+    public heldTetrimino: Tetrimino | null;
     public score: number;
     public level: number;
     public highScore: number;
 
     private genBag: Tetrimino[];
     private bagIndex: number;
+    private canHold: boolean;
 
     constructor(config: TetrisConfig) {
         this.cfg = config;
@@ -86,9 +88,11 @@ export class Tetris {
 
         this.tetrimino = this.getNextTetrimino();
         this.nextTetrimino = this.getNextTetrimino();
+        this.heldTetrimino = null;
         this.score = 0;
         this.level = 1;
         this.highScore = this.cfg.saveHighScore ? this.loadHighScore() : 0;
+        this.canHold = true;
 
         this.spawnTetrimino();
     }
@@ -99,7 +103,6 @@ export class Tetris {
             Math.floor(this.cfg.matrixWidth/2) - 1, 
             this.cfg.matrixHeight
         );
-        console.log(this.tetrimino.center);
         this.tetrimino.resetRotation();
     }
 
@@ -109,11 +112,14 @@ export class Tetris {
      */
     public moveDown(): boolean {
         if (this.checkCollision(this.tetrimino.x, this.tetrimino.y-1, this.tetrimino.minos)) {
+            // Tetrimino is currently on a surface and can't move down
             return true;
         } else if (this.checkCollision(this.tetrimino.x, this.tetrimino.y-2, this.tetrimino.minos)) {
+            // Tetrimino moved down and landed on a surface
             this.tetrimino.y--;
             return true;
         } else {
+            // Tetrimino was able to move down
             this.tetrimino.y--;
             return false;
         }
@@ -228,6 +234,33 @@ export class Tetris {
         this.tetrimino.y = this.getGhostTetriminoY();
     }
 
+    /**
+     * Hold the Tetrimino in play, swapping it with the current held Tetrimino if it exists,
+     * otherwise generating the next Tetrimino. Only one hold can occur per Lock Down.
+     * @returns true if the Tetrimino was held
+     */
+    public hold(): boolean {
+        if (this.canHold) {
+            if (this.heldTetrimino === null) {
+                // Move tetrimino in play to held & generate a new tetrimino
+                this.heldTetrimino = this.tetrimino;
+                this.tetrimino = this.nextTetrimino;
+                this.nextTetrimino = this.getNextTetrimino();
+            } else {
+                // Swap held & in play tetriminos
+                let tmp = this.heldTetrimino;
+                this.heldTetrimino = this.tetrimino;
+                this.tetrimino = tmp;
+            }
+
+            // Spawn the tetrimino at the top of the matrix
+            this.spawnTetrimino();
+            this.canHold = false;
+            return true;
+        }
+        return false;
+    }
+
     /** Lock Down the Tetrimino in play. Place it into the Matrix, and generate the next Tetrimino. */
     public lockDown() {
         let x = this.tetrimino.x;
@@ -240,6 +273,7 @@ export class Tetris {
 
         this.tetrimino = this.nextTetrimino;
         this.nextTetrimino = this.getNextTetrimino();
+        this.canHold = true;
         this.spawnTetrimino();
     }
 
@@ -255,6 +289,7 @@ export class Tetris {
         this.nextTetrimino = this.getNextTetrimino();
         this.score = 0;
         this.level = 1;
+        this.canHold = true;
         this.spawnTetrimino();
     }
 
