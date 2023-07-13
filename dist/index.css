@@ -1,0 +1,8 @@
+@font-face {
+    font-family: 'Robot_Font';
+    src: url('Robot_Font.otf') format('opentype');
+}
+
+#game-canvas {
+    border: 2px solid black;
+}
