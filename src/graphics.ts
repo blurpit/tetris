@@ -1,10 +1,14 @@
 import { TetriminoShape } from "./game";
 import { Vec2 } from "./main";
 
+/** Color type of the form `"rgb(r, g, b)"` */
 type RGB = `rgb(${number}, ${number}, ${number})`;
+/** Color type of the form `"rgb(r, g, b, a)"` */
 type RGBA = `rgb(${number}, ${number}, ${number}, ${number})`;
+/** Color type of the form `"#ffffff"` */
 type HEX = `#${string}`;
 
+/** Block CSS colors */
 export enum BlockColor {
     Yellow    = "#ffe600", // O-Tetrimino
     LightBlue = "#00a2ff", // I-Tetrimino
@@ -17,8 +21,10 @@ export enum BlockColor {
     Ghost     = "#0002",
 }
 
+/** Union color type, including `RGB`, `RGBA`, `HEX`, and `BlockColor` */
 export type Color = RGB | RGBA | HEX | BlockColor;
 
+/** Mapping of `TetriminoShape` to `BlockColor` */
 export const TetriminoColors = [
     BlockColor.Yellow,    // O
     BlockColor.LightBlue, // I
@@ -31,40 +37,64 @@ export const TetriminoColors = [
     BlockColor.Ghost,
 ]
 
+/** Graphics config */
 export type GraphicsConfig = {
     // Game properties
+    /** Canvas element to draw to */
     canvas: HTMLCanvasElement,
+    /** Width of the Matrix in blocks */
     matrixWidth: number,
+    /** Height of the Matrix in blocks */
     matrixHeight: number,
+    /** Width/height of the Next Tetrimino preview window in blocks */
     nextPreviewSize: number
 
     // Game styling
+    /** Show Ghost Piece */
     showGhost: boolean,
+    /** Background color */
     bgColor: Color,
+    /** Background color of the main game area */
     matrixBgColor: Color,
+    /** Stroke color of the main game area */
     matrixStrokeColor: Color,
+    /** Color of the grid lines */
     gridColor: Color,
+    /** Padding in pixels between the Matrix area and the edge of the canvas */
     matrixPadding: number,
+    /** Weight of the stroke around Blocks */
     blockStrokeWidth: number,
+    /** Font family for text */
     fontFamily: string,
+    /** Font size */
     fontSize: number,
+    /** Font size for bigger text, like score numbers */
     bigFontSize: number,
+    /** Padding in pixels between UI text, like score and level */
     textPadding: number,
 }
 
+/** Class for drawing Tetris graphics */
 export class Graphics {
     public cfg: GraphicsConfig;
     
+    /** Canvas reference */
     private canvas: HTMLCanvasElement;
+    /** Canvas 2d context */
     private context: CanvasRenderingContext2D;
+    /** True if a frame is queued to draw */
     private queueFrame: boolean = false;
     
+    /** Matrix of colors to draw */
     private colorMatrix: (BlockColor | null)[][];
 
-    // Ui info
+    /** Shape of the next Tetrimino */
     private nextTetrimino: TetriminoShape;
+    /** Mino positions of the next Tetrimino */
     private nextMinos: Vec2[];
+    /** Current score */
     private score: number;
+    /** Current level */
     private level: number;
 
     constructor(config: GraphicsConfig) {
@@ -91,6 +121,7 @@ export class Graphics {
         this.level = 1;
     }
 
+    /** Reset game */
     public reset() {
         for (let y = 0; y < this.cfg.matrixHeight; y++) {
             for (let x = 0; x < this.cfg.matrixWidth; x++) {
@@ -103,6 +134,7 @@ export class Graphics {
         this.level = 1;
     }
 
+    /** Queue a frame to draw */
     public draw() {
         if (!this.queueFrame) {
             requestAnimationFrame(this.drawFrame.bind(this));
@@ -110,6 +142,7 @@ export class Graphics {
         }
     }
 
+    /** Draw a frame */
     private drawFrame() {
         this.context.fillStyle = this.cfg.bgColor;
         this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -123,6 +156,7 @@ export class Graphics {
         this.queueFrame = false;
     }
 
+    /** Draw grid lines on the Matrix */
     public drawGrid() {
         let width = this.cfg.matrixWidth;
         let height = this.cfg.matrixHeight;
@@ -156,25 +190,45 @@ export class Graphics {
         ctx.stroke();
     }
 
+    /**
+     * Set a Tetrimino in the color matrix
+     * @param x x position of the center Mino
+     * @param y y position of the center Mino
+     * @param minos Array of positions of each Mino in the Tetrimino, relative to the center Mino
+     * @param shape Tetrimino shape
+     */
     public setTetrimino(x: number, y: number, minos: Vec2[], shape: TetriminoShape) {
         for (let mino of minos) {
             this.setBlock(x + mino[0], y + mino[1], shape);
         }
     }
 
+    /**
+     * Set the Next Tetrimino display
+     * @param minos Array of positions of each Mino in the Tetrimino, relative to the center Mino
+     * @param shape Tetrimino shape
+     */
     public setNextTetrimino(minos: Vec2[], shape: TetriminoShape) {
         this.nextMinos = minos;
         this.nextTetrimino = shape;
     }
 
+    /** Set the score display */
     public setScore(score: number) {
         this.score = score;
     }
 
+    /** Set the level display */
     public setLevel(level: number) {
         this.level = level;
     }
 
+    /**
+     * Set a Block color in the color matrix
+     * @param x x position of the Block
+     * @param y y position of the Block
+     * @param shape Tetrimino shape (determines color)
+     */
     public setBlock(x: number, y: number, shape: TetriminoShape) {
         let width = this.cfg.matrixWidth;
         let height = this.cfg.matrixHeight;
@@ -184,6 +238,7 @@ export class Graphics {
         }
     }
 
+    /** Clear a block in the color matrix */
     public clearBlock(x: number, y: number) {
         this.colorMatrix[y][x] = null;
     }
@@ -223,6 +278,13 @@ export class Graphics {
         }
     }
 
+    /**
+     * Draw a single block to the canvas
+     * @param x x position (in pixels, canvas coords) of the block
+     * @param y y posiiton (in pixels, canvas coords) of the block
+     * @param size Width/height of the block in pixels
+     * @param color Block color
+     */
     private drawBlock(x: number, y: number, size: number, color: BlockColor) {
         let ctx = this.context;
         let strokeWidth = this.cfg.blockStrokeWidth;
@@ -236,6 +298,7 @@ export class Graphics {
         ctx.stroke();
     }
 
+    /** Draw the Next Tetrimino and "next" text to the canvas */
     private drawNextTetrimino() {
         let width = this.cfg.nextPreviewSize;
         let size = this.getBlockSize();
@@ -284,6 +347,7 @@ export class Graphics {
         }
     }
 
+    /** Draw the score text to the canvas */
     private drawScore() {
         let size = this.getBlockSize();
         let [matX, matY] = this.getMatrixPos(size);
@@ -306,6 +370,7 @@ export class Graphics {
         ctx.fillText(this.score.toString(), x, y + this.cfg.bigFontSize);
     }
 
+    /** Draw the level text to the canvas */
     private drawLevel() {
         let size = this.getBlockSize();
         let [matX, matY] = this.getMatrixPos(size);
@@ -330,6 +395,11 @@ export class Graphics {
         ctx.fillText(this.level.toString(), x, y + this.cfg.bigFontSize);
     }
 
+    /**
+     * Get the position of the main game area in canvas coordinates
+     * @param blockSize Width/height of Blocks in pixels
+     * @returns Position in pixels of the Matrix
+     */
     private getMatrixPos(blockSize?: number): Vec2 {
         if (blockSize === undefined) 
             blockSize = this.getBlockSize();
@@ -343,6 +413,10 @@ export class Graphics {
         ];
     }
 
+    /**
+     * Calculate the size of Blocks based on the size of the canvas
+     * @returns Width/height of Blocks in pixels
+     */
     private getBlockSize(): number {
         let a = (this.canvas.width - this.cfg.matrixPadding*2) 
                 / this.cfg.matrixWidth;
