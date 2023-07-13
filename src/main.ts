@@ -22,6 +22,7 @@ class Controller {
             linesPerLevel: 10,
             maxLevel: 15,
             softDropSpeedFactor: 20,
+            saveHighScore: true,
         });
 
         this.graphics = new Graphics({
@@ -42,6 +43,8 @@ class Controller {
             bigFontSize: 50,
             textPadding: 8,
         });
+
+        this.graphics.setHighScore(this.game.highScore);
     }
 
     /**
@@ -98,7 +101,8 @@ class Controller {
         this.game.getFullLines().forEach((y) => {
             this.game.clearLine(y);
         });
-        this.graphics.setScore(this.game.linesCleared);
+        this.graphics.setScore(this.game.score);
+        this.graphics.setHighScore(this.game.highScore);
         this.graphics.setLevel(this.game.level);
     }
 

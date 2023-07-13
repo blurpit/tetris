@@ -21,6 +21,8 @@ type TetrisConfig = {
     maxLevel: number,
     /** Factor by which falling speed increases while Soft Dropping (official: 20) */
     softDropSpeedFactor: number,
+    /** If true, high score will be saved to local storage */
+    saveHighScore: boolean,
 }
 
 /** Tetrimino orientations */
@@ -50,8 +52,9 @@ export class Tetris {
 
     public tetrimino: Tetrimino;
     public nextTetrimino: Tetrimino;
-    public linesCleared: number;
+    public score: number;
     public level: number;
+    public highScore: number;
 
     private genBag: Tetrimino[];
     private bagIndex: number;
@@ -83,8 +86,9 @@ export class Tetris {
 
         this.tetrimino = this.getNextTetrimino();
         this.nextTetrimino = this.getNextTetrimino();
-        this.linesCleared = 0;
+        this.score = 0;
         this.level = 1;
+        this.highScore = this.cfg.saveHighScore ? this.loadHighScore() : 0;
 
         this.spawnTetrimino();
     }
@@ -174,8 +178,14 @@ export class Tetris {
             }
         }
 
-        this.linesCleared++;
-        this.level = 1 + Math.floor(this.linesCleared / this.cfg.linesPerLevel);
+        this.score++;
+        if (this.score > this.highScore) {
+            this.highScore = this.score;
+            if (this.cfg.saveHighScore) {
+                this.saveHighScore();
+            }
+        }
+        this.level = 1 + Math.floor(this.score / this.cfg.linesPerLevel);
         this.level = Math.min(this.level, this.cfg.maxLevel);
     }
 
@@ -243,7 +253,7 @@ export class Tetris {
         this.shuffleBag();
         this.tetrimino = this.getNextTetrimino();
         this.nextTetrimino = this.getNextTetrimino();
-        this.linesCleared = 0;
+        this.score = 0;
         this.level = 1;
         this.spawnTetrimino();
     }
@@ -268,6 +278,19 @@ export class Tetris {
             this.genBag[j] = tmp;
         }
         this.bagIndex = 0;
+    }
+
+    /** 
+     * Fetch high score from local storage
+     * @returns the high score
+     */
+    private loadHighScore(): number {
+        return Number.parseInt(window.localStorage.getItem("highScore") || "0");
+    }
+
+    /** Save the high score to local storage */
+    private saveHighScore() {
+        window.localStorage.setItem("highScore", this.highScore.toString());
     }
 }
 

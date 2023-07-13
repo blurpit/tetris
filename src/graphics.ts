@@ -96,6 +96,8 @@ export class Graphics {
     private score: number;
     /** Current level */
     private level: number;
+    /** Current high score */
+    private highScore: number;
     /** Current y value for drawing UI elements */
     private uiY;
 
@@ -121,6 +123,7 @@ export class Graphics {
         this.nextTetrimino = TetriminoShape.O;
         this.score = 0;
         this.level = 1;
+        this.highScore = 0;
         this.uiY = 0;
     }
 
@@ -156,6 +159,7 @@ export class Graphics {
         this.drawNextTetrimino();
         this.drawScore();
         this.drawLevel();
+        this.drawHighScore();
         
         this.queueFrame = false;
     }
@@ -225,6 +229,11 @@ export class Graphics {
     /** Set the level display */
     public setLevel(level: number) {
         this.level = level;
+    }
+
+    /** Set the high score display */
+    public setHighScore(highScore: number) {
+        this.highScore = highScore;
     }
 
     /**
@@ -366,7 +375,7 @@ export class Graphics {
     /** Draw the level text to the canvas */
     private drawLevel() {
         let size = this.getBlockSize();
-        let [matX, _] = this.getMatrixPos();
+        let [matX, _] = this.getMatrixPos(size);
         let ctx = this.context;
 
         let x = matX + size * this.cfg.matrixWidth + this.cfg.matrixPadding;
@@ -381,6 +390,29 @@ export class Graphics {
         // Write level
         ctx.font = `${this.cfg.bigFontSize}px ${this.cfg.fontFamily}`;
         ctx.fillText(this.level.toString(), x, y + this.cfg.bigFontSize);
+        y += this.cfg.bigFontSize;
+
+        this.uiY = y + this.cfg.textPadding;
+    }
+
+    /** Draw the high score text to the canvas */
+    private drawHighScore() {
+        let size = this.getBlockSize();
+        let [matX, _] = this.getMatrixPos();
+        let ctx = this.context;
+
+        let x = matX + size * this.cfg.matrixWidth + this.cfg.matrixPadding;
+        let y = this.uiY + this.cfg.textPadding * 4;
+
+        // Write label
+        ctx.fillStyle = "black";
+        ctx.font = `${this.cfg.fontSize}px ${this.cfg.fontFamily}`;
+        ctx.fillText("high score", x, y + this.cfg.fontSize);
+        y += this.cfg.fontSize;
+
+        // Write high score
+        ctx.font = `${this.cfg.bigFontSize}px ${this.cfg.fontFamily}`;
+        ctx.fillText(this.highScore.toString(), x, y + this.cfg.bigFontSize);
         y += this.cfg.bigFontSize;
 
         this.uiY = y + this.cfg.textPadding;
